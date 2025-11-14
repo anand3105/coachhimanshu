@@ -1,0 +1,157 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String?
+  phone     String?
+  image     String?
+  role      String   @default("user") // "user" or "coach"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  subscriptions    UserSubscription[]
+  workoutPlans     WorkoutPlan[]      @relation("ClientWorkouts")
+  dietPlans        DietPlan[]         @relation("ClientDiets")
+  createdWorkouts  WorkoutPlan[]      @relation("CoachWorkouts")
+  createdDiets     DietPlan[]         @relation("CoachDiets")
+}
+
+model SubscriptionPlan {
+  id          Int      @id @default(autoincrement())
+  name        String   // "Basic", "Pro", "Premium"
+  description String?  @db.Text
+  price       Decimal  @db.Decimal(10, 2)
+  duration    Int      // Duration in days (30, 90, 365)
+  features    String?  @db.Text // JSON string of features
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  subscriptions UserSubscription[]
+}
+
+model UserSubscription {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  planId    Int
+  status    String   @default("active") // "active", "expired", "cancelled"
+  startDate DateTime @default(now())
+  endDate   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan SubscriptionPlan @relation(fields: [planId], references: [id])
+
+  @@index([userId])
+  @@index([planId])
+}
+
+model WorkoutPlan {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?  @db.Text
+  clientId    Int
+  coachId     Int
+  weekNumber  Int      // Week number for tracking weekly plans
+  startDate   DateTime
+  endDate     DateTime
+  notes       String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  client    User       @relation("ClientWorkouts", fields: [clientId], references: [id], onDelete: Cascade)
+  coach     User       @relation("CoachWorkouts", fields: [coachId], references: [id])
+  exercises Exercise[]
+
+  @@index([clientId])
+  @@index([coachId])
+}
+
+model Exercise {
+  id            Int      @id @default(autoincrement())
+  workoutPlanId Int
+  name          String
+  description   String?  @db.Text
+  sets          Int?
+  reps          String?  // "10-12" or "15" etc
+  duration      Int?     // Duration in minutes
+  restTime      Int?     // Rest time in seconds
+  videoUrl      String?
+  day           String   // "Monday", "Tuesday", etc.
+  order         Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  workoutPlan WorkoutPlan @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
+
+  @@index([workoutPlanId])
+}
+
+model DietPlan {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?  @db.Text
+  clientId    Int
+  coachId     Int
+  weekNumber  Int      // Week number for tracking weekly plans
+  startDate   DateTime
+  endDate     DateTime
+  targetCalories Int?
+  notes       String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  client User   @relation("ClientDiets", fields: [clientId], references: [id], onDelete: Cascade)
+  coach  User   @relation("CoachDiets", fields: [coachId], references: [id])
+  meals  Meal[]
+
+  @@index([clientId])
+  @@index([coachId])
+}
+
+model Meal {
+  id          Int      @id @default(autoincrement())
+  dietPlanId  Int
+  name        String
+  description String?  @db.Text
+  mealType    String   // "Breakfast", "Lunch", "Dinner", "Snack"
+  calories    Int?
+  protein     Decimal? @db.Decimal(10, 2)
+  carbs       Decimal? @db.Decimal(10, 2)
+  fats        Decimal? @db.Decimal(10, 2)
+  ingredients String?  @db.Text
+  instructions String? @db.Text
+  day         String   // "Monday", "Tuesday", etc.
+  time        String?  // "08:00 AM"
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  dietPlan DietPlan @relation(fields: [dietPlanId], references: [id], onDelete: Cascade)
+
+  @@index([dietPlanId])
+}

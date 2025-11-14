@@ -14,6 +14,8 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Button from '@/components/Button';
 import PlanCard from '@/components/PlanCard';
+import CheckoutDrawer from '@/components/CheckoutDrawer';
+import { useCart } from '@/contexts/CartContext';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -36,52 +38,71 @@ const itemVariants = {
 };
 
 export default function Home() {
+  const { addToCart } = useCart();
+
   const plans = [
     {
-      title: 'Starter',
+      id: 1,
+      title: 'Kickstart Plan',
       duration: 'Month',
-      price: '₹999',
-      description: 'Begin your transformation',
-      features: [
-        'Personalized workout plans',
-        'Basic diet guidance',
-        'Weekly progress tracking',
-        'Email support',
-      ],
-    },
-    {
-      title: 'Pro',
-      duration: '3 Months',
-      price: '₹2,499',
-      description: 'Build consistency & momentum',
+      price: '₹799',
+      priceValue: 799,
+      description: 'All Inclusive',
       features: [
         'Personalized workout plans',
         'Customized meal plans',
-        'Bi-weekly progress reviews',
-        'Priority email support',
-        'Access to workout videos',
+        'Daily progress tracking',
+        '24/7 WhatsApp support',
+        'Full video library access',
+        'Monthly one-on-one consultations',
+        'Supplement guidance',
+        'Lifestyle coaching',
+      ],
+    },
+    {
+      id: 2,
+      title: 'Consistency Plan',
+      duration: '3 Months',
+      price: '₹1,799',
+      priceValue: 1799,
+      description: 'All Inclusive',
+      features: [
+        'Personalized workout plans',
+        'Customized meal plans',
+        'Daily progress tracking',
+        '24/7 WhatsApp support',
+        'Full video library access',
+        'Monthly one-on-one consultations',
+        'Supplement guidance',
+        'Lifestyle coaching',
       ],
       popular: true,
     },
     {
-      title: 'Elite',
+      id: 3,
+      title: 'Strength Plan',
       duration: '6 Months',
-      price: '₹4,499',
-      description: 'Serious transformation',
+      price: '₹2,999',
+      priceValue: 2999,
+      description: 'All Inclusive',
       features: [
         'Personalized workout plans',
         'Customized meal plans',
-        'Weekly progress reviews',
-        'Direct WhatsApp support',
+        'Daily progress tracking',
+        '24/7 WhatsApp support',
         'Full video library access',
-        '2 one-on-one consultations',
+        'Monthly one-on-one consultations',
+        'Supplement guidance',
+        'Lifestyle coaching',
       ],
     },
     {
-      title: 'Champion',
+      id: 4,
+      title: 'Mastery Plan',
       duration: '12 Months',
-      price: '₹7,999',
-      description: 'Ultimate coaching experience',
+      price: '₹5,499',
+      priceValue: 5499,
+      description: 'All Inclusive',
       features: [
         'Personalized workout plans',
         'Customized meal plans',
@@ -123,7 +144,7 @@ export default function Home() {
     <div className="min-h-screen bg-brand-navy">
       <Navbar />
 
-      <section className="relative pt-40 pb-32 px-6 overflow-hidden">
+      <section className="relative pt-32 md:pt-40 pb-20 md:pb-32 px-4 md:px-6 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-brand-blue/5 to-transparent pointer-events-none" />
         <div className="absolute top-20 right-10 w-72 h-72 bg-brand-blue/5 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-brand-blue/5 rounded-full blur-3xl" />
@@ -134,10 +155,10 @@ export default function Home() {
           animate="visible"
           className="max-w-4xl mx-auto text-center relative z-10"
         >
-          <motion.div variants={itemVariants} className="mb-6">
-            <span className="inline-block px-4 py-2 bg-brand-blue/10 border border-brand-blue/30 rounded-full">
-              <span className="flex items-center gap-2 text-brand-blue text-sm font-semibold">
-                <Zap size={16} />
+          <motion.div variants={itemVariants} className="mb-4 md:mb-6">
+            <span className="inline-block px-3 md:px-4 py-1.5 md:py-2 bg-brand-blue/10 border border-brand-blue/30 rounded-full">
+              <span className="flex items-center gap-2 text-brand-blue text-xs md:text-sm font-semibold">
+                <Zap size={14} className="md:w-4 md:h-4" />
                 Certified Fitness Expert
               </span>
             </span>
@@ -145,7 +166,7 @@ export default function Home() {
 
           <motion.h1
             variants={itemVariants}
-            className="text-6xl md:text-7xl lg:text-8xl font-bold mb-8 leading-tight"
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-6 md:mb-8 leading-tight px-2"
           >
             <span className="text-white">Transform Your</span>
             <br />
@@ -156,7 +177,7 @@ export default function Home() {
 
           <motion.p
             variants={itemVariants}
-            className="text-xl text-gray-300 max-w-2xl mx-auto mb-12 leading-relaxed"
+            className="text-base sm:text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-8 md:mb-12 leading-relaxed px-4"
           >
             Get personalized training and nutrition guidance from a certified expert.
             Start your transformation with Coach Himanshu today.
@@ -164,16 +185,16 @@ export default function Home() {
 
           <motion.div
             variants={itemVariants}
-            className="flex flex-col sm:flex-row gap-4 justify-center"
+            className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center px-4"
           >
-            <a href="#plans">
-              <Button variant="primary" className="gap-2">
+            <a href="#plans" className="w-full sm:w-auto">
+              <Button variant="primary" className="gap-2 w-full sm:w-auto justify-center">
                 <span>Explore Plans</span>
-                <ArrowRight size={20} />
+                <ArrowRight size={18} className="md:w-5 md:h-5" />
               </Button>
             </a>
-            <a href="/dashboard">
-              <Button variant="outline">View Dashboard</Button>
+            <a href="/dashboard" className="w-full sm:w-auto">
+              <Button variant="outline" className="w-full sm:w-auto justify-center">View Dashboard</Button>
             </a>
           </motion.div>
         </motion.div>
@@ -182,19 +203,19 @@ export default function Home() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="max-w-5xl mx-auto mt-24 grid grid-cols-1 md:grid-cols-3 gap-8"
+          className="max-w-5xl mx-auto mt-16 md:mt-24 grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-8 px-4"
         >
           {stats.map((stat, index) => (
             <motion.div
               key={index}
               variants={itemVariants}
-              className="text-center p-8 bg-brand-navy-light border border-brand-navy-light/50 rounded-2xl hover:border-brand-blue/30 transition-all duration-300"
+              className="text-center p-6 md:p-8 bg-brand-navy-light border border-brand-navy-light/50 rounded-xl md:rounded-2xl hover:border-brand-blue/30 transition-all duration-300"
             >
-              <stat.icon className="text-brand-blue mx-auto mb-4" size={32} />
-              <div className="text-4xl font-bold text-brand-gold mb-2">
+              <stat.icon className="text-brand-blue mx-auto mb-3 md:mb-4" size={28} />
+              <div className="text-3xl md:text-4xl font-bold text-brand-gold mb-2">
                 {stat.value}
               </div>
-              <div className="text-gray-400 text-sm">{stat.label}</div>
+              <div className="text-gray-400 text-xs md:text-sm">{stat.label}</div>
             </motion.div>
           ))}
         </motion.div>
@@ -243,7 +264,7 @@ export default function Home() {
         </motion.div>
       </section>
 
-      <section id="plans" className="py-32 px-6">
+      <section id="plans" className="py-16 md:py-32 px-4 md:px-6">
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -251,24 +272,24 @@ export default function Home() {
           viewport={{ once: true }}
           className="max-w-7xl mx-auto"
         >
-          <motion.div variants={itemVariants} className="text-center mb-20">
-            <h2 className="text-5xl font-bold mb-4 text-white">
+          <motion.div variants={itemVariants} className="text-center mb-12 md:mb-20 px-4">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 md:mb-4 text-white">
               Choose Your Plan
             </h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-gray-400 max-w-2xl mx-auto">
               Select the perfect package for your fitness goals. All plans
               include personalized guidance and 24/7 support.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
             {plans.map((plan, index) => (
               <motion.div
                 key={index}
                 variants={itemVariants}
                 viewport={{ once: true }}
               >
-                <PlanCard {...plan} />
+                <PlanCard {...plan} onAddToCart={addToCart} />
               </motion.div>
             ))}
           </div>
@@ -308,6 +329,9 @@ export default function Home() {
       </section>
 
       <Footer />
+
+      {/* Checkout Drawer */}
+      <CheckoutDrawer />
     </div>
   );
 }

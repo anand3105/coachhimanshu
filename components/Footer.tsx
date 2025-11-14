@@ -4,9 +4,9 @@ import { Instagram, Youtube, Mail, Phone } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="bg-brand-navy border-t border-brand-navy-light/20 py-16">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+    <footer className="bg-brand-navy border-t border-brand-navy-light/20 py-12 md:py-16">
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 mb-8 md:mb-12">
           <div>
             <h3 className="text-white font-bold text-lg mb-4">
               Coach Himanshu
