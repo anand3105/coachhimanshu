@@ -151,6 +151,11 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: { unoptimized: true },
+  webpack: (config, { isServer }) => {
+    // Disable following symlinks to avoid permission errors on Windows
+    config.resolve.symlinks = false;
+    return config;
+  },
 };
 
 module.exports = withPWA(nextConfig);
