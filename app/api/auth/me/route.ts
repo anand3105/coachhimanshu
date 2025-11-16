@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
         phone: true,
         image: true,
         role: true,
+        assessmentCompleted: true,
         createdAt: true,
         updatedAt: true,
       },

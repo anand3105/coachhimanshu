@@ -22,6 +22,7 @@ model User {
   phone     String?
   image     String?
   role      String   @default("user") // "user" or "coach"
+  assessmentCompleted Boolean @default(false) // Track if pre-assessment is completed
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -31,6 +32,8 @@ model User {
   dietPlans        DietPlan[]         @relation("ClientDiets")
   createdWorkouts  WorkoutPlan[]      @relation("CoachWorkouts")
   createdDiets     DietPlan[]         @relation("CoachDiets")
+  assessment       ClientAssessment?
+  blogPosts        BlogPost[]
 }
 
 model SubscriptionPlan {
@@ -154,4 +157,159 @@ model Meal {
   dietPlan DietPlan @relation(fields: [dietPlanId], references: [id], onDelete: Cascade)
 
   @@index([dietPlanId])
+}
+
+model PromoCode {
+  id                 Int      @id @default(autoincrement())
+  code               String   @unique // Promo code (e.g., "SAVE20", "NEWYEAR50")
+  discountType       String   // "percentage" or "fixed"
+  discountValue      Decimal  @db.Decimal(10, 2) // 20 (for 20%) or 500 (for ₹500 off)
+  maxUses            Int?     // Maximum number of times this code can be used (null = unlimited)
+  currentUses        Int      @default(0) // Current number of times used
+  minPurchaseAmount  Decimal? @db.Decimal(10, 2) // Minimum purchase amount required
+  expiryDate         DateTime? // Expiry date (null = never expires)
+  isActive           Boolean  @default(true)
+  description        String?  @db.Text // Description of the promo code
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([code])
+}
+
+model ClientAssessment {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+
+  // Personal Information
+  dateOfBirth       DateTime?
+  height            Decimal?  @db.Decimal(5, 2) // in cm
+  weight            Decimal?  @db.Decimal(5, 2) // in kg
+  fatPercentage     Decimal?  @db.Decimal(5, 2)
+  address           String?   @db.Text
+  emergencyContact  String?
+
+  // PAR-Q Form (Yes/No questions)
+  heartCondition    Boolean   @default(false)
+  chestPainActivity Boolean   @default(false)
+  chestPainRest     Boolean   @default(false)
+  dizzinessBalance  Boolean   @default(false)
+  boneJointProblem  Boolean   @default(false)
+  pregnant          Boolean   @default(false)
+  recentSurgery     Boolean   @default(false)
+  takingMedication  Boolean   @default(false)
+  medicationDetails String?   @db.Text
+
+  // Lifestyle
+  smoking           Boolean   @default(false)
+  smokingAmount     String?
+  alcohol           Boolean   @default(false)
+  alcoholGlassesPerWeek Int?
+  sleepHours        Int?
+  jobType           String?   // "sedentary", "active", "physically-demanding"
+  jobRequiresTravel Boolean   @default(false)
+  stressLevel       Int?      // 1-10
+  familyOverweight  String?   @db.Text // JSON array of family members
+  overweightAsChild Boolean   @default(false)
+  overweightAges    String?
+
+  // Fitness History
+  bestShapePeriod   String?   @db.Text
+  exercisingConsistently Boolean @default(false)
+  currentFitnessLevel Int?    // 1-10
+
+  // Nutrition
+  mealsPerDay       Int?
+  skipMeals         Boolean   @default(false)
+  eatBreakfast      Boolean   @default(true)
+  eatLateNight      String?   // "sometimes", "often", "never"
+  energyDrops       Boolean   @default(false)
+  energyDropTime    String?
+  takingSupplements Boolean   @default(false)
+  supplementsList   String?   @db.Text
+  mealLocation      String?   // "eat-outside", "bring-food"
+  eatOutsidePerWeek Int?
+  eatingReasons     String?   @db.Text // JSON array
+  eatPastFullness   String?   // "often", "sometimes", "never"
+  highSugarFoods    String?   // "often", "sometimes", "never"
+
+  // Goals (can select multiple)
+  goalLoseFat       Boolean   @default(false)
+  goalRehabilitate  Boolean   @default(false)
+  goalSportsTraining Boolean  @default(false)
+  goalMuscleGain    Boolean   @default(false)
+  goalOther         String?   @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model BlogPost {
+  id          Int      @id @default(autoincrement())
+  title       String
+  slug        String   @unique
+  content     String   @db.LongText
+  excerpt     String?  @db.Text
+  coverImage  String?
+  videoUrl    String?  // YouTube video URL
+  authorId    Int
+  published   Boolean  @default(false)
+  publishedAt DateTime?
+  readTime    Int?     // Reading time in minutes
+  views       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@index([slug])
+  @@index([publishedAt])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  coachId   Int      // Coach who created the notification
+  message   String   @db.Text
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([coachId])
+  @@index([isActive])
+}
+
+model PushSubscription {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  endpoint     String   @db.Text
+  endpointHash String   @db.VarChar(64) // Hash of endpoint for unique constraint
+  p256dh       String   @db.Text
+  auth         String   @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+  @@unique([userId, endpointHash])
+}
+
+model ContactSubmission {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String   @db.Text
+  status    String   @default("new") // "new", "read", "replied", "closed"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
 }

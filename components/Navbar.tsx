@@ -6,14 +6,18 @@ import { useState } from 'react';
 import { Menu, X, ShoppingCart, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoginModal from './LoginModal';
+import GetAppModal from './GetAppModal';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isGetAppOpen, setIsGetAppOpen] = useState(false);
 
   const navLinks = [
     { href: '/', label: 'Home' },
+    { href: '/about', label: 'About' },
     { href: '/#plans', label: 'Plans' },
+    { href: '/blog', label: 'Blog' },
     { href: 'https://rhynogrip.com', label: 'Store' },
   ];
 
@@ -48,12 +52,12 @@ export default function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-6">
-            <Link
-              href="#"
+            <button
+              onClick={() => setIsGetAppOpen(true)}
               className="px-4 py-2 bg-brand-blue text-white rounded-lg font-semibold text-sm hover:bg-blue-600 transition-all duration-300"
             >
               Get App
-            </Link>
+            </button>
             <button
               onClick={() => setIsLoginOpen(true)}
               className="text-gray-300 hover:text-white transition-colors"
@@ -99,13 +103,6 @@ export default function Navbar() {
                   {link.label}
                 </Link>
               ))}
-              <Link
-                href="#"
-                className="block w-full bg-brand-blue text-white px-4 py-2 rounded-lg font-semibold text-center hover:bg-blue-600 transition-all duration-300 mt-4"
-                onClick={() => setIsOpen(false)}
-              >
-                Get App
-              </Link>
               <button
                 onClick={() => {
                   setIsOpen(false);
@@ -115,13 +112,15 @@ export default function Navbar() {
               >
                 Login
               </button>
-              <Link
-                href="/cart"
-                className="block text-gray-300 hover:text-white transition-colors py-2"
-                onClick={() => setIsOpen(false)}
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  setIsGetAppOpen(true);
+                }}
+                className="block w-full bg-brand-blue text-white px-4 py-2 rounded-lg font-semibold text-center hover:bg-blue-600 transition-all duration-300 mt-4"
               >
-                Cart
-              </Link>
+                Get App
+              </button>
             </div>
           </motion.div>
         )}
@@ -129,6 +128,7 @@ export default function Navbar() {
       </nav>
 
       <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+      <GetAppModal isOpen={isGetAppOpen} onClose={() => setIsGetAppOpen(false)} />
     </>
   );
 }

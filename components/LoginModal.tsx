@@ -61,9 +61,10 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         return;
       }
 
-      // Save token to localStorage
+      // Save token and user data to localStorage
       localStorage.setItem('token', data.token);
-      console.log('Token saved to localStorage');
+      localStorage.setItem('user', JSON.stringify(data.user));
+      console.log('Token and user saved to localStorage');
 
       // Check subscription status and show appropriate message
       if (!isLogin) {
@@ -71,16 +72,29 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         onClose();
         router.push('/#plans');
       } else {
-        // For login, check subscription
-        if (data.subscription && !data.subscription.isActive) {
-          alert(data.subscription.message || 'Your subscription has expired. Please renew to continue.');
-          onClose();
-          router.push('/#plans');
-        } else {
-          // Redirect to dashboard
-          console.log('Redirecting to dashboard...');
+        // For login, check if user is a coach
+        if (data.user.role === 'coach') {
+          // Coaches go directly to dashboard (no assessment needed)
+          console.log('Coach login - Redirecting to dashboard...');
           onClose();
           router.push('/dashboard');
+        } else {
+          // For regular users/clients, check assessment FIRST (before subscription)
+          if (!data.user.assessmentCompleted) {
+            console.log('Client needs assessment - Redirecting to assessment...');
+            onClose();
+            router.push('/assessment');
+          } else if (data.subscription && !data.subscription.isActive) {
+            // Then check subscription status
+            alert(data.subscription.message || 'Your subscription has expired. Please renew to continue.');
+            onClose();
+            router.push('/#plans');
+          } else {
+            // Redirect to dashboard
+            console.log('Client login - Redirecting to dashboard...');
+            onClose();
+            router.push('/dashboard');
+          }
         }
       }
     } catch (err) {

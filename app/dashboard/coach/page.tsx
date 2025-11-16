@@ -16,13 +16,17 @@ import {
   Edit,
   Trash2,
   CreditCard,
-  UserPlus
+  UserPlus,
+  FileText,
+  Bell
 } from 'lucide-react';
 import CreateWorkoutModal from '@/components/forms/CreateWorkoutModal';
 import CreateDietModal from '@/components/forms/CreateDietModal';
 import ClientManagementModal from '@/components/forms/ClientManagementModal';
 import SubscriptionManagementModal from '@/components/forms/SubscriptionManagementModal';
 import ClientDetailModal from '@/components/forms/ClientDetailModal';
+import CreateBlogModal from '@/components/CreateBlogModal';
+import NotificationModal from '@/components/NotificationModal';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -40,6 +44,8 @@ export default function CoachDashboard() {
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
   const [isClientDetailModalOpen, setIsClientDetailModalOpen] = useState(false);
+  const [isBlogModalOpen, setIsBlogModalOpen] = useState(false);
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [selectedWorkout, setSelectedWorkout] = useState<any>(null);
   const [selectedDiet, setSelectedDiet] = useState<any>(null);
@@ -323,6 +329,20 @@ export default function CoachDashboard() {
               >
                 <Plus className="w-5 h-5" />
                 Create Diet
+              </button>
+              <button
+                onClick={() => setIsBlogModalOpen(true)}
+                className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-6 py-3 rounded-xl font-semibold hover:from-orange-600 hover:to-amber-600 transition-all flex items-center gap-2"
+              >
+                <FileText className="w-5 h-5" />
+                Create Blog Post
+              </button>
+              <button
+                onClick={() => setIsNotificationModalOpen(true)}
+                className="bg-gradient-to-r from-red-500 to-rose-500 text-white px-6 py-3 rounded-xl font-semibold hover:from-red-600 hover:to-rose-600 transition-all flex items-center gap-2"
+              >
+                <Bell className="w-5 h-5" />
+                Notify Clients
               </button>
             </div>
           </motion.div>
@@ -683,6 +703,16 @@ export default function CoachDashboard() {
         onEditClient={handleEditClient}
         onDeleteClient={handleDeleteClient}
         onAddSubscription={handleAddSubscription}
+      />
+      <CreateBlogModal
+        isOpen={isBlogModalOpen}
+        onClose={() => setIsBlogModalOpen(false)}
+        onSuccess={fetchDashboardData}
+      />
+      <NotificationModal
+        isOpen={isNotificationModalOpen}
+        onClose={() => setIsNotificationModalOpen(false)}
+        onSuccess={fetchDashboardData}
       />
     </div>
   );
