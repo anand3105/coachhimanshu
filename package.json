@@ -9,8 +9,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "seed": "tsx prisma/seed.ts",
-    "generate:icons": "node scripts/generate-pwa-icons.js",
-    "postinstall": "prisma generate"
+    "generate:icons": "node scripts/generate-pwa-icons.js"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
