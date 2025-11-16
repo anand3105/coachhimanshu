@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
           name: user.name,
           phone: user.phone,
           role: user.role,
+          assessmentCompleted: user.assessmentCompleted,
           createdAt: user.createdAt,
         },
       },

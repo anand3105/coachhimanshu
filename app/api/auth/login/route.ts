@@ -72,6 +72,7 @@ export async function POST(request: NextRequest) {
           phone: user.phone,
           image: user.image,
           role: user.role,
+          assessmentCompleted: user.assessmentCompleted,
           createdAt: user.createdAt.toISOString(),
         },
         subscription: subscriptionStatus,

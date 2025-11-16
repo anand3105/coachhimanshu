@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ShoppingCart, Trash2, CheckCircle, User, Phone, Mail, Target, FileText, MessageCircle, QrCode, ArrowLeft } from 'lucide-react';
+import { X, ShoppingCart, Trash2, CheckCircle, User, Phone, Mail, Target, FileText, MessageCircle, QrCode, ArrowLeft, Tag, Loader2 } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -21,6 +21,12 @@ export default function CheckoutDrawer() {
   });
   const [errors, setErrors] = useState<any>({});
   const router = useRouter();
+
+  // Promo code state
+  const [promoCode, setPromoCode] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState<any>(null);
+  const [promoError, setPromoError] = useState('');
+  const [isValidatingPromo, setIsValidatingPromo] = useState(false);
 
   const validateForm = () => {
     const newErrors: any = {};
@@ -53,15 +59,34 @@ export default function CheckoutDrawer() {
     }
   };
 
-  const handlePaymentComplete = () => {
+  const handlePaymentComplete = async () => {
+    // If promo code was applied, increment usage count
+    if (appliedPromo) {
+      try {
+        await fetch('/api/promo-codes/apply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code: appliedPromo.promoCode.code,
+          }),
+        });
+      } catch (error) {
+        console.error('Error applying promo code:', error);
+        // Continue anyway - payment is more important
+      }
+    }
+
     // Show WhatsApp confirmation message
     const plan = cartItems[0];
+    const promoText = appliedPromo
+      ? `\nPromo Code: ${appliedPromo.promoCode.code}\nDiscount: ₹${appliedPromo.discountAmount}\nOriginal Price: ₹${getTotalPrice()}\nFinal Amount: ₹${getFinalTotal()}`
+      : '';
     const message = encodeURIComponent(
-      `Hi, I've completed payment for ${plan?.name} (₹${getTotalPrice()})\n\nName: ${formData.name}\nEmail: ${formData.email}\nWhatsApp: ${formData.whatsapp}\nGoal: ${formData.goal}\n\nPlease find the payment screenshot attached.`
+      `Hi, I've completed payment for ${plan?.name}\n\nName: ${formData.name}\nEmail: ${formData.email}\nWhatsApp: ${formData.whatsapp}\nGoal: ${formData.goal}${promoText}\n\nAmount Paid: ₹${getFinalTotal()}\n\nPlease find the payment screenshot attached.`
     );
 
     // Open WhatsApp
-    window.open(`https://wa.me/918077509495?text=${message}`, '_blank');
+    window.open(`https://wa.me/917303484648?text=${message}`, '_blank');
 
     // Show success after short delay
     setTimeout(() => {
@@ -76,11 +101,63 @@ export default function CheckoutDrawer() {
     }, 500);
   };
 
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim()) {
+      setPromoError('Please enter a promo code');
+      return;
+    }
+
+    setIsValidatingPromo(true);
+    setPromoError('');
+
+    try {
+      const response = await fetch('/api/promo-codes/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: promoCode.toUpperCase(),
+          cartTotal: getTotalPrice(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setAppliedPromo(data);
+        setPromoError('');
+      } else {
+        setPromoError(data.error || 'Invalid promo code');
+        setAppliedPromo(null);
+      }
+    } catch (error) {
+      setPromoError('Failed to validate promo code');
+      setAppliedPromo(null);
+    } finally {
+      setIsValidatingPromo(false);
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setPromoCode('');
+    setAppliedPromo(null);
+    setPromoError('');
+  };
+
+  const getFinalTotal = () => {
+    if (appliedPromo) {
+      return appliedPromo.finalAmount;
+    }
+    return getTotalPrice();
+  };
+
   const handleClose = () => {
     closeCheckout();
     setCurrentStep('cart');
     setFormData({ name: '', whatsapp: '', email: '', goal: '', notes: '' });
     setErrors({});
+    setPromoCode('');
+    setAppliedPromo(null);
+    setPromoError('');
   };
 
   const handleBack = () => {
@@ -184,6 +261,76 @@ export default function CheckoutDrawer() {
                           </div>
                         </motion.div>
                       ))}
+
+                      {/* Promo Code Section */}
+                      <div className="mt-6 pt-6 border-t border-white/10">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Tag className="w-5 h-5 text-brand-gold" />
+                          <h3 className="text-white font-semibold">Have a Promo Code?</h3>
+                        </div>
+
+                        {!appliedPromo ? (
+                          <div className="space-y-3">
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={promoCode}
+                                onChange={(e) => {
+                                  setPromoCode(e.target.value.toUpperCase());
+                                  setPromoError('');
+                                }}
+                                onKeyPress={(e) => e.key === 'Enter' && handleApplyPromo()}
+                                placeholder="Enter code"
+                                className="flex-1 bg-brand-navy/50 border border-white/10 rounded-lg px-4 py-3 text-white uppercase focus:outline-none focus:border-brand-gold"
+                                disabled={isValidatingPromo}
+                              />
+                              <button
+                                onClick={handleApplyPromo}
+                                disabled={isValidatingPromo || !promoCode.trim()}
+                                className="px-6 py-3 bg-gradient-to-r from-brand-gold to-yellow-600 text-brand-navy font-semibold rounded-lg hover:shadow-lg hover:shadow-brand-gold/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                              >
+                                {isValidatingPromo ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    Applying...
+                                  </>
+                                ) : (
+                                  'Apply'
+                                )}
+                              </button>
+                            </div>
+                            {promoError && (
+                              <p className="text-red-400 text-sm flex items-center gap-2">
+                                <X className="w-4 h-4" />
+                                {promoError}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <CheckCircle className="w-5 h-5 text-green-400" />
+                                  <span className="text-green-400 font-semibold">{appliedPromo.promoCode.code}</span>
+                                </div>
+                                {appliedPromo.promoCode.description && (
+                                  <p className="text-gray-400 text-sm ml-7">{appliedPromo.promoCode.description}</p>
+                                )}
+                                <p className="text-green-400 text-sm mt-2 ml-7">
+                                  You saved ₹{appliedPromo.discountAmount.toLocaleString()}!
+                                </p>
+                              </div>
+                              <button
+                                onClick={handleRemovePromo}
+                                className="text-gray-400 hover:text-red-400 transition-colors"
+                              >
+                                <X size={20} />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </>
@@ -310,8 +457,20 @@ export default function CheckoutDrawer() {
                     <div className="bg-white/5 border border-white/10 rounded-lg p-4 mb-6">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-gray-400">Amount to Pay</span>
-                        <span className="text-2xl font-bold text-white">₹{getTotalPrice().toLocaleString()}</span>
+                        <span className="text-2xl font-bold text-white">₹{getFinalTotal().toLocaleString()}</span>
                       </div>
+                      {appliedPromo && (
+                        <div className="flex items-center justify-between text-sm text-gray-400 mb-1">
+                          <span>Original Price:</span>
+                          <span className="line-through">₹{getTotalPrice().toLocaleString()}</span>
+                        </div>
+                      )}
+                      {appliedPromo && (
+                        <div className="flex items-center justify-between text-sm text-green-400 mb-2">
+                          <span>Discount ({appliedPromo.promoCode.code}):</span>
+                          <span>-₹{appliedPromo.discountAmount.toLocaleString()}</span>
+                        </div>
+                      )}
                       <p className="text-gray-500 text-xs">Plan: {cartItems[0]?.name}</p>
                     </div>
 
@@ -325,7 +484,7 @@ export default function CheckoutDrawer() {
                             After completing the payment, please share your payment screenshot to confirm your subscription.
                           </p>
                           <p className="text-gray-400 text-xs mb-3">
-                            WhatsApp Number: <span className="text-white font-semibold">+91 80775 09495</span>
+                            WhatsApp Number: <span className="text-white font-semibold">+91 7303484648</span>
                           </p>
                         </div>
                       </div>
@@ -346,7 +505,7 @@ export default function CheckoutDrawer() {
                         Having issues with payment? Contact us on WhatsApp
                       </p>
                       <a
-                        href="https://wa.me/918077509495"
+                        href="https://wa.me/917303484648"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="mt-3 inline-flex items-center gap-2 bg-green-500/20 text-green-400 px-4 py-2 rounded-lg hover:bg-green-500/30 transition-all text-sm"
@@ -397,10 +556,27 @@ export default function CheckoutDrawer() {
               <div className="bg-brand-navy/90 backdrop-blur-md border-t border-white/10 p-6">
                 {currentStep === 'cart' && cartItems.length > 0 && (
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between text-lg mb-4">
-                      <span className="text-gray-300">Total Amount</span>
-                      <span className="text-3xl font-bold text-white">₹{getTotalPrice().toLocaleString()}</span>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-lg">
+                        <span className="text-gray-300">Subtotal</span>
+                        <span className="text-xl font-semibold text-white">₹{getTotalPrice().toLocaleString()}</span>
+                      </div>
+
+                      {appliedPromo && (
+                        <div className="flex items-center justify-between text-lg">
+                          <span className="text-green-400">Discount ({appliedPromo.promoCode.code})</span>
+                          <span className="text-xl font-semibold text-green-400">-₹{appliedPromo.discountAmount.toLocaleString()}</span>
+                        </div>
+                      )}
+
+                      <div className="pt-3 border-t border-white/10">
+                        <div className="flex items-center justify-between text-lg mb-4">
+                          <span className="text-gray-300 font-semibold">Total Amount</span>
+                          <span className="text-3xl font-bold text-white">₹{getFinalTotal().toLocaleString()}</span>
+                        </div>
+                      </div>
                     </div>
+
                     <button
                       onClick={handleProceedToDetails}
                       className="w-full bg-gradient-to-r from-brand-blue to-brand-blue-dark text-white font-bold py-4 rounded-xl hover:shadow-[0_0_30px_rgba(23,95,255,0.4)] transition-all duration-300"

@@ -36,15 +36,23 @@ export default function DashboardRedirect() {
 
         const data = await res.json();
         const userRole = data.user?.role;
+        const assessmentCompleted = data.user?.assessmentCompleted;
         console.log('User role:', userRole);
+        console.log('Assessment completed:', assessmentCompleted);
 
         // Redirect based on role
         if (userRole === 'coach') {
           console.log('Redirecting to coach dashboard');
           router.push('/dashboard/coach');
         } else {
-          console.log('Redirecting to client dashboard');
-          router.push('/dashboard/client');
+          // Check if client has completed assessment
+          if (!assessmentCompleted) {
+            console.log('Client needs to complete assessment, redirecting...');
+            router.push('/assessment');
+          } else {
+            console.log('Redirecting to client dashboard');
+            router.push('/dashboard/client');
+          }
         }
       } catch (error) {
         console.error('Error redirecting user:', error);
